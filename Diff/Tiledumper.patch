@@ -1,0 +1,294 @@
+diff --git a/bsnes/debug/tile-dumper.hpp b/bsnes/debug/tile-dumper.hpp
+new file mode 100644
+index 0000000..9487f5a
+--- /dev/null
++++ b/bsnes/debug/tile-dumper.hpp
+@@ -0,0 +1,36 @@
++/**
++ * Tile Dumper - Exports SNES tiles as PNG files
++ */
++
++#pragma once
++
++#include <nall/file.hpp>
++#include <nall/encode/png.hpp>
++#include <nall/hash/crc32.hpp>
++#include <set>
++
++class TileDumper {
++public:
++  // Initialize with ROM path
++  static auto initialize(const string& romPath) -> bool;
++  
++  // Check if dumping is enabled
++  static auto enabled() -> bool;
++  
++  // Enable or disable dumping
++  static auto setEnabled(bool enabled) -> void;
++  
++  // Dump a tile if it's new (returns true if tile was dumped)
++  static auto dumpTile(const uint8_t* data, uint size, uint width, uint height, 
++                      const uint32_t* palette, uint bpp, uint palIndex = 0) -> bool;
++  
++private:
++  // Unique tile tracking
++  static std::set<uint32_t> tileHashes;
++  
++  // Output configuration
++  static string dumpDir;
++  static uint32_t counter;
++  
++  static bool isEnabled;
++  static bool isInitialized;
++};
+diff --git a/bsnes/debug/tile-dumper.cpp b/bsnes/debug/tile-dumper.cpp
+new file mode 100644
+index 0000000..47a9ccc
+--- /dev/null
++++ b/bsnes/debug/tile-dumper.cpp
+@@ -0,0 +1,126 @@
++#include "tile-dumper.hpp"
++#include "../target-bsnes/program/program.hpp"
++#include "../target-bsnes/settings/settings.hpp"
++
++// Initialize static members
++std::set<uint32_t> TileDumper::tileHashes;
++string TileDumper::dumpDir;
++uint32_t TileDumper::counter = 0;
++bool TileDumper::isEnabled = true;
++bool TileDumper::isInitialized = false;
++
++auto TileDumper::initialize(const string& romPath) -> bool {
++  // Reset state
++  tileHashes.clear();
++  counter = 0;
++  
++  // Get base directory
++  string baseDir = program.path("Dumps");
++  
++  // Create base directory if needed
++  if (!directory::exists(baseDir)) {
++    if (!directory::create(baseDir)) return false;
++  }
++  
++  // Extract ROM name
++  string romName = romPath.split("/").last().split("\\").last().split(".").first();
++  if (romName.empty()) romName = "unknown";
++  
++  // Create tiledumps directory if needed
++  string tilesDir = {baseDir, "tiles/"};
++  if (!directory::exists(tilesDir)) {
++    if (!directory::create(tilesDir)) return false;
++  }
++  
++  // Create ROM directory
++  dumpDir = {tilesDir, romName, "/"};
++  if (!directory::exists(dumpDir)) {
++    if (!directory::create(dumpDir)) return false;
++  }
++  
++  isInitialized = true;
++  return true;
++}
++
++auto TileDumper::enabled() -> bool {
++  return isEnabled && isInitialized && settings.emulator.debug.dumpTiles;
++}
++
++auto TileDumper::setEnabled(bool enabled) -> void {
++  isEnabled = enabled;
++}
++
++auto TileDumper::dumpTile(const uint8_t* data, uint size, uint width, uint height,
++                        const uint32_t* palette, uint bpp, uint palIndex) -> bool {
++  // Skip if disabled or invalid data
++  if (!enabled() || !data || !palette || size == 0) return false;
++  
++  // Check for duplicates
++  uint32_t hash = Hash::CRC32(data, size).value();
++  if (tileHashes.find(hash) != tileHashes.end()) return false;
++  
++  // Mark as seen
++  tileHashes.insert(hash);
++  
++  try {
++    // Number of colors for this bit depth
++    uint numColors = 1 << bpp;
++    
++    // Create image
++    nall::image image;
++    image.allocate(width, height);
++    
++    // Convert tile data to image
++    for (uint y = 0; y < height; y++) {
++      for (uint x = 0; x < width; x++) {
++        uint pixelIndex = y * width + x;
++        uint colorIndex = 0;
++        
++        // Get color index based on bit depth
++        switch (bpp) {
++          case 2:  // 4 colors
++            if (pixelIndex / 4 < size) {
++              colorIndex = (data[pixelIndex / 4] >> ((pixelIndex % 4) * 2)) & 0x3;
++            }
++            break;
++          case 4:  // 16 colors
++            if (pixelIndex / 2 < size) {
++              colorIndex = (data[pixelIndex / 2] >> ((pixelIndex % 2) * 4)) & 0xF;
++            }
++            break;
++          case 8:  // 256 colors
++            if (pixelIndex < size) {
++              colorIndex = data[pixelIndex];
++            }
++            break;
++          default:  // Default to 4bpp
++            if (pixelIndex / 2 < size) {
++              colorIndex = (data[pixelIndex / 2] >> ((pixelIndex % 2) * 4)) & 0xF;
++            }
++            break;
++        }
++        
++        // Apply palette
++        uint finalIndex = (palIndex * numColors) + colorIndex;
++        uint32_t color = finalIndex < 256 ? palette[finalIndex] : 0;
++        
++        // Set pixel
++        image.write(x, y, color);
++      }
++    }
++    
++    // Save image
++    string filename = {dumpDir, "tile-", hex(counter++, 6L), "-", hex(hash, 8L), ".png"};
++    return image.save(filename);
++  } catch (...) {
++    return false;
++  }
++}
+diff --git a/bsnes/target-bsnes/settings/settings.hpp b/bsnes/target-bsnes/settings/settings.hpp
+index eeeeeeee..ffffffff 100644
+--- a/bsnes/target-bsnes/settings/settings.hpp
++++ b/bsnes/target-bsnes/settings/settings.hpp
+@@ -35,6 +35,10 @@ struct Settings : Markup::Node {
+     bool adaptiveBilinearHD = true;
+     bool overscanEnable = false;
+     uint overscanHorizontal = 8;
++    
++    struct Debug {
++      bool dumpTiles = true;
++    } debug;
+   } emulator;
+ 
+   struct Path {
+diff --git a/bsnes/target-bsnes/settings/settings.cpp b/bsnes/target-bsnes/settings/settings.cpp
+index gggggggg..hhhhhhhh 100644
+--- a/bsnes/target-bsnes/settings/settings.cpp
++++ b/bsnes/target-bsnes/settings/settings.cpp
+@@ -81,6 +81,7 @@ auto Settings::process(bool load) -> void {
+   boolean(emulator.overscan.allow);
+   boolean(emulator.adaptiveBilinearHD);
+   boolean(emulator.overscanEnable);
++  boolean(emulator.debug.dumpTiles);
+ 
+   natural(emulator.widescreen.width);
+   natural(emulator.widescreen.height);
+diff --git a/bsnes/target-bsnes/settings/enhancement-settings.cpp b/bsnes/target-bsnes/settings/enhancement-settings.cpp
+index iiiiiiii..jjjjjjjj 100644
+--- a/bsnes/target-bsnes/settings/enhancement-settings.cpp
++++ b/bsnes/target-bsnes/settings/enhancement-settings.cpp
+@@ -1,4 +1,5 @@
+ #include "../bsnes.hpp"
++#include "../../debug/tile-dumper.hpp"
+ 
+ EnhancementSettings::EnhancementSettings(View* parent) : Panel(parent, Size{~0, ~0}) {
+   setCollapsible();
+@@ -321,6 +322,15 @@ auto EnhancementSettings::create() -> void {
+   widescreenDebug.setText("Debug").onToggle([&] {
+     settings.emulator.widescreen.showDebug = widescreenDebug.checked();
+   }).setChecked(settings.emulator.widescreen.showDebug);
++  
++  // Add debugging section
++  Label debugLabel{this, Size{~0, 0}, 2};
++  debugLabel.setText("Debugging");
++  
++  CheckLabel dumpTilesOption{this, Size{0, 0}};
++  dumpTilesOption.setText("Dump Tiles").onToggle([&] {
++    settings.emulator.debug.dumpTiles = dumpTilesOption.checked();
++    TileDumper::setEnabled(dumpTilesOption.checked());
++  });
++  dumpTilesOption.setChecked(settings.emulator.debug.dumpTiles);
+ }
+diff --git a/bsnes/target-bsnes/program/game.cpp b/bsnes/target-bsnes/program/game.cpp
+index kkkkkkkk..llllllll 100644
+--- a/bsnes/target-bsnes/program/game.cpp
++++ b/bsnes/target-bsnes/program/game.cpp
+@@ -1,4 +1,5 @@
+ #include "../bsnes.hpp"
++#include "../../debug/tile-dumper.hpp"
+ 
+ auto Program::load() -> void {
+   unload();
+@@ -118,6 +119,12 @@ auto Program::loadSuperFamicom(string location) -> bool {
+     emulator.configure("System/Satellaview.LoadSlot", settings.emulator.hack.hotfixes);
+   }
+ 
++  // Initialize tile dumper if enabled
++  if (settings.emulator.debug.dumpTiles) {
++    TileDumper::initialize(location);
++    TileDumper::setEnabled(true);
++  }
++
+   emulator.power();
+   return true;
+ }
+diff --git a/bsnes/sfc/ppu/ppu.hpp b/bsnes/sfc/ppu/ppu.hpp
+index aaaaaaa..bbbbbbbb 100644
+--- a/bsnes/sfc/ppu/ppu.hpp
++++ b/bsnes/sfc/ppu/ppu.hpp
+@@ -1,5 +1,6 @@
+ #include <sfc/sfc.hpp>
+ #include <processor/processor.hpp>
++#include "../../debug/tile-dumper.hpp"
+ 
+ namespace SuperFamicom {
+ 
+@@ -118,6 +119,24 @@ struct PPU : Thread, PPUcounter {
+     }
+   }
+ 
++  // Dump a tile from VRAM
++  inline auto dumpTile(uint16_t addr, uint bpp, uint width, uint height, uint pal) -> void {
++    if (!TileDumper::enabled()) return;
++
++    // Calculate size in bytes
++    uint size = (width * height * bpp) / 8;
++    
++    // Safety checks
++    if (size == 0 || size > 64) return;
++    
++    // Copy VRAM data
++    uint8_t data[64] = {0};
++    for (uint i = 0; i < size && (addr + i) < 0x8000; i++) {
++      data[i] = vram[addr + i];
++    }
++    
++    TileDumper::dumpTile(data, size, width, height, cgram, bpp, pal);
++  }
++
+   //status
+   uint8 version = 1;  //allowed values: 1, 2
+   auto interlace() const -> bool { return io.interlace; }
+diff --git a/bsnes/sfc/ppu/background.cpp b/bsnes/sfc/ppu/background.cpp
+index cccccccc..dddddddd 100644
+--- a/bsnes/sfc/ppu/background.cpp
++++ b/bsnes/sfc/ppu/background.cpp
+@@ -190,6 +190,9 @@ auto PPU::Background::renderTile(uint x, uint y, uint16 tile) -> void {
+     uint16 h = ppu.mosaic.size;
+     uint x0 = x / h * h;
+     uint y0 = y / h * h;
++    
++    // Dump the tile
++    self.dumpTile(tiledata, self.io.mode.bits(), 8, 8, palette);
+ 
+     if(x >= x0 && y >= y0) {
+       if(x == x0 && y == y0) {
