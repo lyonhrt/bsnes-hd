@@ -35,7 +35,9 @@ auto PPU::Screen::below(bool hires) -> uint16 {
   uint priority = 0;
   if(ppu.bg1.output.below.priority) {
     priority = ppu.bg1.output.below.priority;
-    if(io.directColor && (ppu.io.bgMode == 3 || ppu.io.bgMode == 4 || ppu.io.bgMode == 7)) {
+    if(ppu.bg1.output.below.hdPresent) {
+      math.below.color = ppu.bg1.output.below.hdColor;
+    } else if(io.directColor && (ppu.io.bgMode == 3 || ppu.io.bgMode == 4 || ppu.io.bgMode == 7)) {
       math.below.color = directColor(ppu.bg1.output.below.palette, ppu.bg1.output.below.paletteGroup);
     } else {
       math.below.color = paletteColor(ppu.bg1.output.below.palette);
@@ -43,15 +45,15 @@ auto PPU::Screen::below(bool hires) -> uint16 {
   }
   if(ppu.bg2.output.below.priority > priority) {
     priority = ppu.bg2.output.below.priority;
-    math.below.color = paletteColor(ppu.bg2.output.below.palette);
+    math.below.color = ppu.bg2.output.below.hdPresent ? ppu.bg2.output.below.hdColor : paletteColor(ppu.bg2.output.below.palette);
   }
   if(ppu.bg3.output.below.priority > priority) {
     priority = ppu.bg3.output.below.priority;
-    math.below.color = paletteColor(ppu.bg3.output.below.palette);
+    math.below.color = ppu.bg3.output.below.hdPresent ? ppu.bg3.output.below.hdColor : paletteColor(ppu.bg3.output.below.palette);
   }
   if(ppu.bg4.output.below.priority > priority) {
     priority = ppu.bg4.output.below.priority;
-    math.below.color = paletteColor(ppu.bg4.output.below.palette);
+    math.below.color = ppu.bg4.output.below.hdPresent ? ppu.bg4.output.below.hdColor : paletteColor(ppu.bg4.output.below.palette);
   }
   if(ppu.obj.output.below.priority > priority) {
     priority = ppu.obj.output.below.priority;
@@ -74,7 +76,9 @@ auto PPU::Screen::above() -> uint16 {
   uint priority = 0;
   if(ppu.bg1.output.above.priority) {
     priority = ppu.bg1.output.above.priority;
-    if(io.directColor && (ppu.io.bgMode == 3 || ppu.io.bgMode == 4 || ppu.io.bgMode == 7)) {
+    if(ppu.bg1.output.above.hdPresent) {
+      math.above.color = ppu.bg1.output.above.hdColor;
+    } else if(io.directColor && (ppu.io.bgMode == 3 || ppu.io.bgMode == 4 || ppu.io.bgMode == 7)) {
       math.above.color = directColor(ppu.bg1.output.above.palette, ppu.bg1.output.above.paletteGroup);
     } else {
       math.above.color = paletteColor(ppu.bg1.output.above.palette);
@@ -83,17 +87,17 @@ auto PPU::Screen::above() -> uint16 {
   }
   if(ppu.bg2.output.above.priority > priority) {
     priority = ppu.bg2.output.above.priority;
-    math.above.color = paletteColor(ppu.bg2.output.above.palette);
+    math.above.color = ppu.bg2.output.above.hdPresent ? ppu.bg2.output.above.hdColor : paletteColor(ppu.bg2.output.above.palette);
     math.below.colorEnable = io.bg2.colorEnable;
   }
   if(ppu.bg3.output.above.priority > priority) {
     priority = ppu.bg3.output.above.priority;
-    math.above.color = paletteColor(ppu.bg3.output.above.palette);
+    math.above.color = ppu.bg3.output.above.hdPresent ? ppu.bg3.output.above.hdColor : paletteColor(ppu.bg3.output.above.palette);
     math.below.colorEnable = io.bg3.colorEnable;
   }
   if(ppu.bg4.output.above.priority > priority) {
     priority = ppu.bg4.output.above.priority;
-    math.above.color = paletteColor(ppu.bg4.output.above.palette);
+    math.above.color = ppu.bg4.output.above.hdPresent ? ppu.bg4.output.above.hdColor : paletteColor(ppu.bg4.output.above.palette);
     math.below.colorEnable = io.bg4.colorEnable;
   }
   if(ppu.obj.output.above.priority > priority) {

@@ -178,6 +178,7 @@ auto Presentation::create() -> void {
   cheatEditor.setIcon(Icon::Edit::Replace).setText("Cheat Editor ...").onActivate([&] { toolsWindow.show(1); });
   stateManager.setIcon(Icon::Application::FileManager).setText("State Manager ...").onActivate([&] { toolsWindow.show(2); });
   manifestViewer.setIcon(Icon::Emblem::Text).setText("Manifest Viewer ...").onActivate([&] { toolsWindow.show(3); });
+  hdPackBuilder.setIcon(Icon::Action::Add).setText("HD Pack Builder ...").onActivate([&] { toolsWindow.show(4); });
 
   helpMenu.setText(tr("Help"));
   documentation.setIcon(Icon::Application::Browser).setText({tr("bsnes documentation"), " ..."}).onActivate([&] {

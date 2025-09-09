@@ -71,6 +71,8 @@ auto Program::hackCompatibility() -> void {
   emulator->configure("Hacks/PPU/Fast", fastPPU);
   emulator->configure("Hacks/PPU/NoSpriteLimit", fastPPUNoSpriteLimit);
   emulator->configure("Hacks/PPU/RenderCycle", renderCycle);
+  emulator->configure("Hacks/PPU/HDTileDump", settings.emulator.hack.ppu.hdTileDump);
+  emulator->configure("Hacks/PPU/UseHDPack", settings.emulator.hack.ppu.useHDPack);
   emulator->configure("Hacks/PPU/Mode7/Scale", settings.emulator.hack.ppu.mode7.scale);	
   emulator->configure("Hacks/PPU/Mode7/Perspective", settings.emulator.hack.ppu.mode7.perspective);	
   emulator->configure("Hacks/PPU/Mode7/Widescreen", settings.emulator.hack.ppu.mode7.widescreen);	

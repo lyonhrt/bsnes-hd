@@ -45,6 +45,8 @@ struct Configuration {
       bool deinterlace = true;
       bool noSpriteLimit = true;
       bool noVRAMBlocking = false;
+      bool hdTileDump = false;
+      bool useHDPack = false;
       uint renderCycle = 512;
       struct Mode7 {
         uint scale = 2;

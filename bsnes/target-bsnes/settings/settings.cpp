@@ -124,6 +124,8 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Emulator/Hack/PPU/Deinterlace",         emulator.hack.ppu.deinterlace);
   bind(boolean, "Emulator/Hack/PPU/NoSpriteLimit",       emulator.hack.ppu.noSpriteLimit);
   bind(boolean, "Emulator/Hack/PPU/NoVRAMBlocking",      emulator.hack.ppu.noVRAMBlocking);
+  bind(boolean, "Emulator/Hack/PPU/HDTileDump",          emulator.hack.ppu.hdTileDump);
+  bind(boolean, "Emulator/Hack/PPU/UseHDPack",           emulator.hack.ppu.useHDPack);
   bind(natural, "Emulator/Hack/PPU/Mode7/Scale",         emulator.hack.ppu.mode7.scale);
   bind(natural, "Emulator/Hack/PPU/Mode7/Perspective",   emulator.hack.ppu.mode7.perspective);
   bind(natural, "Emulator/Hack/PPU/Mode7/Widescreen",    emulator.hack.ppu.mode7.widescreen);

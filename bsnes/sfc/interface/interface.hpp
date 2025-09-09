@@ -8,6 +8,8 @@ struct ID {
     BSMemory,
     SufamiTurboA,
     SufamiTurboB,
+    HDTileDump,
+    HDPack,
   };
 
   struct Port { enum : uint {

@@ -5,6 +5,58 @@
 #include <heuristics/game-boy.cpp>
 #include <heuristics/bs-memory.cpp>
 #include <heuristics/sufami-turbo.cpp>
+#include <sfc/interface/interface.hpp>
+
+//ROM data is held in memory to support compressed archives, soft-patching, and game hacks
+auto Program::path(uint id) -> string {
+  using namespace SuperFamicom;
+
+  // Map known IDs to relevant directory paths
+  switch(id) {
+  case ID::System:
+    // Where optional firmware ROMs are placed
+    return locate("Firmware/");
+
+  case ID::SuperFamicom: {
+    auto loc = superFamicom.location;
+    if(!loc) return "";
+    return loc.endsWith("/") ? loc : Location::dir(loc);
+  }
+
+  case ID::GameBoy: {
+    auto loc = gameBoy.location;
+    if(!loc) return "";
+    return loc.endsWith("/") ? loc : Location::dir(loc);
+  }
+
+  case ID::BSMemory: {
+    auto loc = bsMemory.location;
+    if(!loc) return "";
+    return loc.endsWith("/") ? loc : Location::dir(loc);
+  }
+
+  case ID::SufamiTurboA: {
+    auto loc = sufamiTurboA.location;
+    if(!loc) return "";
+    return loc.endsWith("/") ? loc : Location::dir(loc);
+  }
+
+  case ID::SufamiTurboB: {
+    auto loc = sufamiTurboB.location;
+    if(!loc) return "";
+    return loc.endsWith("/") ? loc : Location::dir(loc);
+  }
+
+  case ID::HDTileDump:
+    return hdTileDumpPath();
+
+  case ID::HDPack:
+    return hdPackPath();
+
+  default:
+    return "";
+  }
+}
 
 //ROM data is held in memory to support compressed archives, soft-patching, and game hacks
 auto Program::open(uint id, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {

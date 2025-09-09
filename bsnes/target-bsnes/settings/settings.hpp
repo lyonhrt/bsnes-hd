@@ -112,6 +112,8 @@ struct Settings : Markup::Node {
         bool deinterlace = true;
         bool noSpriteLimit = true;
         bool noVRAMBlocking = false;
+        bool hdTileDump = false;
+        bool useHDPack = false;
         struct Mode7 {
           uint scale = 2;
           uint perspective = 1;
@@ -379,6 +381,8 @@ public:
         CheckLabel fastPPU{&ppuLayout, Size{0, 0}};
         CheckLabel deinterlace{&ppuLayout, Size{0, 0}};
         CheckLabel noSpriteLimit{&ppuLayout, Size{0, 0}};
+        CheckLabel hdTileDump{&ppuLayout, Size{0, 0}};
+        CheckLabel useHDPack{&ppuLayout, Size{0, 0}};
     //
     VerticalLayout dspVLayout{&topLayout, Size{~0, 0}};
       Label dspLabel{&dspVLayout, Size{~0, 0}, 2};

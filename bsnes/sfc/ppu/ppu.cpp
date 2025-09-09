@@ -1,8 +1,15 @@
 #include <sfc/sfc.hpp>
+#include <nall/encode/bmp.hpp>
+#include <nall/encode/png.hpp>
+#include <nall/file.hpp>
+#include <nall/image.hpp>
+#include <nall/map.hpp>
 
 namespace SuperFamicom {
 
 PPU ppu;
+auto FlushHDTileDumpCache() -> void;   // make visible to other translation units
+auto FlushSpriteDumpCache() -> void;   // sprite tile flush (defined in object.cpp)
 #include "main.cpp"
 #include "io.cpp"
 #include "mosaic.cpp"

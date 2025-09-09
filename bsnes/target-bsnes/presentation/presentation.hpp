@@ -117,6 +117,7 @@ struct Presentation : Window {
       MenuItem cheatEditor{&toolsMenu};
       MenuItem stateManager{&toolsMenu};
       MenuItem manifestViewer{&toolsMenu};
+      MenuItem hdPackBuilder{&toolsMenu};
     Menu helpMenu{&menuBar};
       MenuItem documentation{&helpMenu};
       MenuItem documentationHd{&helpMenu};

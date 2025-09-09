@@ -7,6 +7,7 @@ struct Program : Lock, Emulator::Platform {
   auto quit() -> void;
 
   //platform.cpp
+  auto path(uint id) -> string override;
   auto open(uint id, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
   auto load(uint id, string name, string type, vector<string> options = {}) -> Emulator::Platform::Load override;
   auto videoFrame(const uint32* data, uint pitch, uint width, uint height, uint scale) -> void override;
@@ -49,6 +50,8 @@ struct Program : Lock, Emulator::Platform {
   auto cheatPath() -> string;
   auto statePath() -> string;
   auto screenshotPath() -> string;
+  auto hdTileDumpPath() -> string;
+  auto hdPackPath() -> string;
 
   //states.cpp
   struct State {

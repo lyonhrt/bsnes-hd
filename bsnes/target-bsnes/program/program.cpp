@@ -43,6 +43,7 @@ auto Program::create() -> void {
   stateWindow.create();
   stateManager.create();
   manifestViewer.create();
+  hdPackBuilder.create();
 
   if(settings.general.crashed) {
     MessageDialog(

@@ -27,6 +27,7 @@ struct Object {
   auto run() -> void;
   auto fetch() -> void;
   auto power() -> void;
+  auto dumpSpriteTile(const OAM::Object& sprite, uint tx) -> void;
 
   auto onScanline(PPU::OAM::Object&) -> bool;
 

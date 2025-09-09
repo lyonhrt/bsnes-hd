@@ -72,3 +72,38 @@ auto Program::screenshotPath() -> string {
   }
   return {location, "000.bmp"};
 }
+
+auto Program::hdPackPath() -> string {
+  if(!emulator->loaded()) return "";
+  auto location = gamePath();
+  // Derive display name from ROM path (file or folder)
+  string gameName;
+  if(location.endsWith("/")) {
+    gameName = Location::prefix(Location::base(location));
+  } else {
+    auto filename = Location::file(location);
+    gameName = Location::prefix(filename);
+  }
+  if(!gameName) gameName = "Unknown";
+  // Save relative to program root: <program>/hdpack/<gameName>/
+  auto dir = string{Path::program(), "hdpack/", gameName, "/"};
+  directory::create(dir);
+  static string lastAnnouncedHDPack;
+  if(dir != lastAnnouncedHDPack) {
+    showMessage({"HD pack directory [", dir, "]"});
+    lastAnnouncedHDPack = dir;
+  }
+  return dir;
+}
+
+auto Program::hdTileDumpPath() -> string {
+  if(!emulator->loaded()) return "";
+  // Use the HD pack directory for dumping tiles as well to avoid creating a separate 'hdtiles' folder.
+  auto dir = hdPackPath();
+  static string lastAnnouncedHDTiles;
+  if(dir != lastAnnouncedHDTiles) {
+    showMessage({"Dumping HD tiles to [", dir, "]"});
+    lastAnnouncedHDTiles = dir;
+  }
+  return dir;
+}

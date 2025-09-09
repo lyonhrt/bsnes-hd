@@ -10,6 +10,8 @@ auto Program::load() -> void {
   emulator->configure("Hacks/PPU/Deinterlace", settings.emulator.hack.ppu.deinterlace);
   emulator->configure("Hacks/PPU/NoSpriteLimit", settings.emulator.hack.ppu.noSpriteLimit);
   emulator->configure("Hacks/PPU/NoVRAMBlocking", settings.emulator.hack.ppu.noVRAMBlocking);
+  emulator->configure("Hacks/PPU/HDTileDump", settings.emulator.hack.ppu.hdTileDump);
+  emulator->configure("Hacks/PPU/UseHDPack", settings.emulator.hack.ppu.useHDPack);
   emulator->configure("Hacks/PPU/Mode7/Scale", settings.emulator.hack.ppu.mode7.scale);
   emulator->configure("Hacks/PPU/Mode7/Perspective", settings.emulator.hack.ppu.mode7.perspective);
   emulator->configure("Hacks/PPU/Mode7/Supersample", settings.emulator.hack.ppu.mode7.supersample);
@@ -341,6 +343,8 @@ auto Program::reset() -> void {
   showMessage("Game reset");
 }
 
+namespace SuperFamicom { auto FlushHDTileDumpCache() -> void; }
+
 auto Program::unload() -> void {
   if(!emulator->loaded()) return;
   //todo: video.clear() is not working on macOS/OpenGL 3.2
@@ -353,6 +357,8 @@ auto Program::unload() -> void {
   rewindReset();  //free up memory that is no longer needed
   movieStop();  //in case a movie is currently being played or recorded
   cheatEditor.saveCheats();
+  // Flush any pending in-memory HD tile dumps before unloading the emulator
+  ::SuperFamicom::FlushHDTileDumpCache();
   toolsWindow.setVisible(false);
   if(emulatorSettings.autoSaveStateOnUnload.checked()) {
     saveUndoState();

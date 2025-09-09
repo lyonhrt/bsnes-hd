@@ -180,6 +180,18 @@ public:
   #endif
 };
 
+struct HDPackBuilder : VerticalLayout {
+  auto create() -> void;
+
+public:
+  Label headerLabel{this, Size{~0, 0}};
+  Canvas headerSpacer{this, Size{~0, 1}};
+  HorizontalLayout toggleLayout{this, Size{~0, 0}};
+    CheckLabel useHDPackToggle{&toggleLayout, Size{0, 0}};
+    CheckLabel hdTileDumpToggle{&toggleLayout, Size{0, 0}};
+  TextEdit infoView{this, Size{~0, ~0}};
+};
+
 struct ToolsWindow : Window {
   auto create() -> void;
   auto setVisible(bool visible = true) -> ToolsWindow&;
@@ -202,5 +214,6 @@ namespace Instances { extern Instance<StateWindow> stateWindow; }
 extern StateWindow& stateWindow;
 extern StateManager stateManager;
 extern ManifestViewer manifestViewer;
+extern HDPackBuilder hdPackBuilder;
 namespace Instances { extern Instance<ToolsWindow> toolsWindow; }
 extern ToolsWindow& toolsWindow;

@@ -1,4 +1,5 @@
 Configuration configuration;
+auto FlushHDTileDumpCache() -> void;  // from PPU background (declared in SuperFamicom)
 
 auto Configuration::process(Markup::Node document, bool load) -> void {
   #define bind(type, path, name) \
@@ -32,6 +33,8 @@ auto Configuration::process(Markup::Node document, bool load) -> void {
   bind(natural, "Hacks/PPU/RenderCycle", hacks.ppu.renderCycle);
   bind(boolean, "Hacks/PPU/NoSpriteLimit", hacks.ppu.noSpriteLimit);
   bind(boolean, "Hacks/PPU/NoVRAMBlocking", hacks.ppu.noVRAMBlocking);
+  bind(boolean, "Hacks/PPU/HDTileDump", hacks.ppu.hdTileDump);
+  bind(boolean, "Hacks/PPU/UseHDPack", hacks.ppu.useHDPack);
   bind(natural, "Hacks/PPU/Mode7/Scale", hacks.ppu.mode7.scale);
   bind(natural, "Hacks/PPU/Mode7/Perspective", hacks.ppu.mode7.perspective);
   bind(natural, "Hacks/PPU/Mode7/Widescreen", hacks.ppu.mode7.widescreen);
@@ -90,7 +93,12 @@ auto Configuration::write(string name, string value) -> bool {
   auto document = BML::unserialize(read());
   if(auto node = document[name]) {
     node.setValue(value);
-    return process(document, true), true;
+    process(document, true);
+    // If dumping was just turned off, flush any pending in-memory tiles
+    if(name == "Hacks/PPU/HDTileDump" && !hacks.ppu.hdTileDump) {
+      FlushHDTileDumpCache();
+    }
+    return true;
   }
 
   return false;

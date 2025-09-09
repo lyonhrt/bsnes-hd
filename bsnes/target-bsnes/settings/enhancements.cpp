@@ -74,6 +74,15 @@ auto EnhancementSettings::create() -> void {
     settings.emulator.hack.ppu.noSpriteLimit = noSpriteLimit.checked();
   });
 
+  hdTileDump.setText("Dump HD tiles").setChecked(settings.emulator.hack.ppu.hdTileDump).onToggle([&] {
+    settings.emulator.hack.ppu.hdTileDump = hdTileDump.checked();
+    emulator->configure("Hacks/PPU/HDTileDump", settings.emulator.hack.ppu.hdTileDump);
+  });
+  useHDPack.setText("Use HD packs").setChecked(settings.emulator.hack.ppu.useHDPack).onToggle([&] {
+    settings.emulator.hack.ppu.useHDPack = useHDPack.checked();
+    emulator->configure("Hacks/PPU/UseHDPack", settings.emulator.hack.ppu.useHDPack);
+  });
+
 
   mode7Label.setText("HD Mode 7 / bsnes-hd").setFont(Font().setBold());
   mode7ScaleLabel.setText("Scale:");
